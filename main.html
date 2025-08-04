@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dog Clicker 🐶</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #ffe5b4;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 260px;
+            background: #fff8e1;
+            border-right: 2px solid #ffd699;
+            padding: 24px 12px;
+            box-sizing: border-box;
+        }
+        .upgrade {
+            display: flex;
+            align-items: center;
+            background: #fff3cd;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            padding: 10px;
+            opacity: 1;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        .upgrade.locked {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .upgrade img {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+        }
+        .upgrade-info {
+            flex: 1;
+            text-align: left;
+        }
+        .upgrade-name {
+            font-weight: bold;
+        }
+        .upgrade-desc {
+            font-size: 0.95em;
+            color: #795548;
+        }
+        .upgrade-cost {
+            margin-left: 10px;
+            font-size: 1.1em;
+            color: #d2691e;
+        }
+        .main {
+            flex: 1;
+            text-align: center;
+            padding: 40px 0;
+        }
+        h1 {
+            font-size: 2.5rem;
+        }
+        #dog-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        #dog-img {
+            width: 180px;
+            transition: transform 0.1s;
+        }
+        #dog-btn:active #dog-img {
+            transform: scale(1.07);
+        }
+        .stats {
+            font-size: 1.5rem;
+            margin: 16px 0;
+        }
+        @media (max-width: 800px) {
+            .container {flex-direction: column;}
+            .sidebar {width: 100%; border-right: none; border-bottom: 2px solid #ffd699;}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar"></div>
+        <div class="main">
+            <h1>Dog Clicker 🐶</h1>
+            <div class="stats">
+                Dogs: <span id="dog-count">0</span><br>
+                Dogs per click: <span id="dog-per-click">1</span><br>
+                Dogs per second: <span id="dog-per-sec">0</span>
+            </div>
+            <button id="dog-btn">
+                <!-- 1x1 transparent PNG, replace with your own base64 dog for real icon! -->
+                <img id="dog-img"
+                    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABFUlEQVR42mNgGAXUBw1gZGBg+M8ABLkAG2A0sB4mDFbGRj5j4iK4w1MTAz/g8kJk2YAo5g8b/AwPD0wVXwQ1e4g6AeQUOye0BTEOEaY+MQDDhXQyHQA3zQYTxj8QF0QFzI8QwYtS0Q4Ox4o2g/gE2M8QJYQJpQH/MnMBT8xwBz5h1GCUQbA2wUe4YJZj6g2AxA0hYI0v1g8Bh6g6A4DDeATYwO8IuIABwUpfBzA4n7gAAAABJRU5ErkJggg=="
+                    alt="Dog">
+            </button>
+        </div>
+    </div>
+    <script>
+        let dogCount = 0;
+        let dogsPerClick = 1;
+        let dogsPerSecond = 0;
+
+        // Upgrades data
+        const upgrades = [
+            {
+                icon: "🐾", // Emoji icon
+                name: "Better Treats",
+                desc: "+1 Dog per Click",
+                cost: 10,
+                buy: () => { dogsPerClick += 1; },
+                costInc: 1.6
+            },
+            {
+                icon: "🏠",
+                name: "Dog House",
+                desc: "+1 Dog per Second",
+                cost: 50,
+                buy: () => { dogsPerSecond += 1; },
+                costInc: 2
+            },
+            {
+                icon: "🐕",
+                name: "Puppy Helper",
+                desc: "+5 Dogs per Second",
+                cost: 200,
+                buy: () => { dogsPerSecond += 5; },
+                costInc: 2.5
+            },
+            {
+                icon: "🍖",
+                name: "Super Treats",
+                desc: "+5 Dogs per Click",
+                cost: 300,
+                buy: () => { dogsPerClick += 5; },
+                costInc: 2.2
+            },
+            {
+                icon: "🚀",
+                name: "Dog Rocket",
+                desc: "+50 Dogs per Second",
+                cost: 1000,
+                buy: () => { dogsPerSecond += 50; },
+                costInc: 3
+            }
+        ];
+
+        // Track how many times each upgrade has been purchased
+        const upgradesPurchased = Array(upgrades.length).fill(0);
+
+        // Render sidebar upgrades
+        function renderUpgrades() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.innerHTML = '<h2 style="text-align:center;margin-top:0;">Upgrades</h2>';
+            upgrades.forEach((upg, i) => {
+                let currCost = Math.floor(upg.cost * Math.pow(upg.costInc, upgradesPurchased[i]));
+                const canBuy = dogCount >= currCost;
+                sidebar.innerHTML += `
+                <div class="upgrade${canBuy ? '' : ' locked'}" data-upg="${i}" title="${upg.desc}">
+                    <span style="font-size:2em;">${upg.icon}</span>
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">${upg.name}</div>
+                        <div class="upgrade-desc">${upg.desc}</div>
+                    </div>
+                    <div class="upgrade-cost">${currCost} 🐶</div>
+                </div>`;
+            });
+            // Add event listeners
+            document.querySelectorAll('.upgrade').forEach(el => {
+                el.onclick = () => {
+                    const idx = +el.getAttribute('data-upg');
+                    buyUpgrade(idx);
+                };
+            });
+        }
+
+        function buyUpgrade(i) {
+            let upg = upgrades[i];
+            let currCost = Math.floor(upg.cost * Math.pow(upg.costInc, upgradesPurchased[i]));
+            if (dogCount >= currCost) {
+                dogCount -= currCost;
+                upg.buy();
+                upgradesPurchased[i]++;
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('dog-count').textContent = dogCount;
+            document.getElementById('dog-per-click').textContent = dogsPerClick;
+            document.getElementById('dog-per-sec').textContent = dogsPerSecond;
+            renderUpgrades();
+        }
+
+        document.getElementById('dog-btn').addEventListener('click', () => {
+            dogCount += dogsPerClick;
+            updateUI();
+        });
+
+        // Auto-increment dogs per second
+        setInterval(() => {
+            dogCount += dogsPerSecond;
+            updateUI();
+        }, 1000);
+
+        updateUI();
+    </script>
+</body>
+</html>
